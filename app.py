@@ -24,6 +24,30 @@ training_state = {
 }
 
 
+def _parse_int(value, default, minimum=None, maximum=None):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    if minimum is not None:
+        parsed = max(minimum, parsed)
+    if maximum is not None:
+        parsed = min(maximum, parsed)
+    return parsed
+
+
+def _parse_float(value, default, minimum=None, maximum=None):
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        parsed = default
+    if minimum is not None:
+        parsed = max(minimum, parsed)
+    if maximum is not None:
+        parsed = min(maximum, parsed)
+    return parsed
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -39,9 +63,9 @@ def favicon():
 def generate():
     data        = request.get_json(silent=True) or {}
     genre       = data.get("genre",       "classical")
-    n_notes     = int(data.get("n_notes", 200))
-    bpm         = int(data.get("bpm",     120))
-    temperature = float(data.get("temperature", 0.8))
+    n_notes     = _parse_int(data.get("n_notes"), 200, minimum=1, maximum=1000)
+    bpm         = _parse_int(data.get("bpm"), 120, minimum=30, maximum=300)
+    temperature = _parse_float(data.get("temperature"), 0.8, minimum=0.1, maximum=2.0)
     use_ai      = data.get("use_ai", False)   
 
     filename = f"generated_{genre}_{int(time.time())}.mid"
@@ -104,7 +128,7 @@ def train():
 
     data   = request.get_json(silent=True) or {}
     genre  = data.get("genre",  "classical")
-    epochs = int(data.get("epochs", 50))
+    epochs = _parse_int(data.get("epochs"), 50, minimum=1, maximum=500)
 
     def _train():
         global training_state
@@ -135,7 +159,7 @@ def train():
                     training_state["progress"] = pct
                     loss = f"{logs.get('loss',0):.4f}"
                     training_state["message"] = (
-                        f"Epoch {epoch+1}/{epochs} · loss={loss}")
+                        f"Epoch {epoch+1}/{epochs} - loss={loss}")
 
             from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
             from generate import MODEL_WEIGHTS, MAPPING_CACHE
@@ -149,7 +173,7 @@ def train():
                       validation_split=0.1, callbacks=cbs, verbose=0)
 
             training_state.update({"running": False, "progress": 100,
-                                    "message": "Training complete ✓"})
+                                    "message": "Training complete"})
         except Exception as e:
             training_state.update({"running": False, "error": str(e),
                                     "message": "Training failed"})
