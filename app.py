@@ -3,7 +3,7 @@ import os
 import time
 import threading
 import json
-from flask import (Flask, render_template, request, jsonify,
+from flask import (Flask, render_template, request, jsonify, Response,
                    send_from_directory, abort)
 
 app = Flask(__name__)
@@ -27,6 +27,12 @@ training_state = {
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return Response(b"", mimetype="image/x-icon")
+
 
 
 @app.route("/generate", methods=["POST"])
