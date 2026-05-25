@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Music </title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="app-shell">
+
+  
+  <header class="header">
+    <div class="header-inner">
+      
+        <div>
+          <div class="logo-title">AI Music Creator </div>
+          
+        
+      </div>
+      
+    </div>
+  </header>
+
+  
+  <div class="pipeline-bar">
+    <div class="pipe-step" data-step="0" onclick="activateStep(0)">
+      <div class="ps-num">01</div>
+      <div class="ps-label">Search</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-step" data-step="1" onclick="activateStep(1)">
+      <div class="ps-num">02</div>
+      <div class="ps-label">Create</div>
+    </div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-step" data-step="2" onclick="activateStep(2)">
+      <div class="ps-num">03</div>
+      <div class="ps-label">Download</div>
+    </div>
+  </div>
+
+  <main class="main-content">
+
+    
+    <section class="step-panel active" id="step0">
+      <h2 class="panel-title">Configure Generation</h2>
+
+     
+      <div class="field-group">
+        <label class="field-label">Genre</label>
+        <div class="genre-grid">
+          <button class="genre-btn selected" data-genre="classical" onclick="pickGenre(this)">
+           
+            <span class="gb-name">Classical</span>
+          </button>
+          <button class="genre-btn" data-genre="jazz" onclick="pickGenre(this)">
+            
+            <span class="gb-name">Jazz</span>
+          </button>
+          <button class="genre-btn" data-genre="blues" onclick="pickGenre(this)">
+            
+            <span class="gb-name">Blues</span>
+          </button>
+          <button class="genre-btn" data-genre="folk" onclick="pickGenre(this)">
+            
+            <span class="gb-name">Folk</span>
+          </button>
+        </div>
+      </div>
+
+      
+      <div class="slider-grid">
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-label">Notes</span>
+            <span class="slider-val" id="notesVal">200</span>
+          </div>
+          <input type="range" id="notesSlider" min="50" max="500" step="50" value="200"
+            oninput="document.getElementById('notesVal').textContent=this.value">
+        </div>
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-label">Tempo </span>
+            <span class="slider-val" id="bpmVal">120</span>
+          </div>
+          <input type="range" id="bpmSlider" min="60" max="200" step="5" value="120"
+            oninput="document.getElementById('bpmVal').textContent=this.value">
+        </div>
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-label">Temperature</span>
+            <span class="slider-val" id="tempVal">0.8</span>
+          </div>
+          <input type="range" id="tempSlider" min="1" max="20" step="1" value="8"
+            oninput="document.getElementById('tempVal').textContent=(this.value/10).toFixed(1)">
+        </div>
+      </div>
+
+      
+      <div class="mode-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="useAI">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          Use trained LSTM model
+        </label>
+        <span class="mode-hint" id="modeHint">Fast rule-based mode</span>
+      </div>
+
+      <button class="btn-generate" onclick="activateStep(1); doGenerate()">
+        ♪ Create Music
+      </button>
+    </section>
+
+    
+    <section class="step-panel" id="step1">
+      <h2 class="panel-title">Creating…</h2>
+
+      <div class="gen-status-box" id="genStatusBox">
+        <div class="gsb-icon" id="gsbIcon">♩</div>
+        <div class="gsb-message" id="gsbMessage">Initialising…</div>
+        <div class="gsb-sub" id="gsbSub">Please wait...</div>
+        <div class="progress-wrap">
+          <div class="progress-bar">
+            <div class="progress-fill" id="genProgress"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="piano-roll-wrap">
+        <div class="pr-label">Live note sequence preview</div>
+        <canvas id="pianoRoll" width="800" height="90"></canvas>
+      </div>
+    </section>
+
+   
+    <section class="step-panel" id="step2">
+      <h2 class="panel-title">Your Music is Ready!!!</h2>
+
+     
+      <div class="player-card" id="playerCard">
+        <div class="player-art">♫</div>
+        <div class="player-info">
+          <div class="player-filename" id="playerFilename">—</div>
+          <div class="player-meta" id="playerMeta">—</div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <a class="btn-download" id="downloadBtn" href="#" download>
+           Download MIDI
+        </a>
+        <button class="btn-secondary" id="playAudioBtn" onclick="playGeneratedAudio()" disabled>
+           Play Audio
+        </button>
+        <button class="btn-secondary" id="exportAudioBtn" onclick="exportGeneratedAudio()" disabled>
+          Export Audio
+        </button>
+      </div>
+
+      <div class="audio-status" id="audioStatus">Audio ready when your song is Created.</div>
+
+      
+      <div class="history-wrap" id="historyWrap">
+        <div class="history-title">Previous </div>
+        <div id="historyList"></div>
+      </div>
+    </section>
+
+  </main>
+
+ 
+  <nav class="bottom-nav">
+    <button onclick="activateStep(0)" id="nav0" class="nav-btn active">Create</button>
+    <button onclick="activateStep(2); loadHistory()" id="navH" class="nav-btn">History</button>
+  </nav>
+
+</div>
+
+<script src="{{ url_for('static', filename='css/js/app.js') }}"></script>
+</body>
+</html>
+
