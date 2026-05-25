@@ -1,4 +1,0 @@
-flask==3.0.0
-music21==9.1.0
-numpy==1.26.4
-tensorflow==2.15.0
