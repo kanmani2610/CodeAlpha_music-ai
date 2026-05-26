@@ -14,6 +14,7 @@ let audioRecorder    = null;
 let genProgressTimer = null;
 let trainPollTimer   = null;
 let pianoAnim        = null;
+let isAudioPlaying   = false;
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -40,6 +41,7 @@ function activateStep(n) {
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   if (n === 0) document.getElementById("nav0")?.classList.add("active");
   if (n === 2) document.getElementById("navH")?.classList.add("active");
+  if (n === 3) document.getElementById("navT")?.classList.add("active");
 }
 
 
@@ -196,7 +198,7 @@ function pollTraining() {
         if (data.error) {
           logTrain("✗ " + data.error);
         } else {
-          logTrain("✓ Model saved → models/lstm_weights.h5");
+          logTrain("✓ Model saved → models/lstm.weights.h5");
           checkModelStatus();
         }
       }
@@ -219,13 +221,30 @@ async function checkModelStatus() {
     const data = await res.json();
     const dot  = document.querySelector(".pill-dot");
     const txt  = document.getElementById("modelPillText");
+    const useAI = document.getElementById("useAI");
+    const modeHint = document.getElementById("modeHint");
 
-    if (data.model_cached) {
-      dot.className  = "pill-dot ready";
-      txt.textContent = "Model ready";
+    if (data.tensorflow_available && data.model_cached) {
+      if (dot) dot.className = "pill-dot ready";
+      if (txt) txt.textContent = "Model ready";
+      if (useAI) useAI.disabled = false;
+      if (modeHint && useAI?.checked) modeHint.textContent = "LSTM model mode";
+    } else if (!data.tensorflow_available) {
+      if (dot) dot.className = "pill-dot";
+      if (txt) txt.textContent = "TensorFlow missing";
+      if (useAI) {
+        useAI.checked = false;
+        useAI.disabled = true;
+      }
+      if (modeHint) modeHint.textContent = "LSTM needs TensorFlow";
     } else {
-      dot.className  = "pill-dot";
-      txt.textContent = "No model — rule-based";
+      if (dot) dot.className = "pill-dot";
+      if (txt) txt.textContent = "No model - rule-based";
+      if (useAI) {
+        useAI.checked = false;
+        useAI.disabled = true;
+      }
+      if (modeHint) modeHint.textContent = "Train LSTM model first";
     }
   } catch (_) { /* silent */ }
 }
@@ -294,7 +313,10 @@ function updateAudioButtons() {
   const playBtn = document.getElementById("playAudioBtn");
   const exportBtn = document.getElementById("exportAudioBtn");
   const enabled = generatedNotes.length > 0;
-  if (playBtn) playBtn.disabled = !enabled;
+  if (playBtn) {
+    playBtn.disabled = !enabled;
+    playBtn.textContent = isAudioPlaying ? "Stop Audio" : "Play Audio";
+  }
   if (exportBtn) exportBtn.disabled = !enabled;
 }
 
@@ -304,8 +326,11 @@ function setAudioStatus(msg) {
 }
 
 async function playGeneratedAudio() {
+  if (isAudioPlaying) {
+    stopGeneratedAudio("Playback stopped.");
+    return;
+  }
   if (!generatedNotes.length) return;
-  stopGeneratedAudio();
 
   const ctx = getAudioContext();
   if (!ctx) {
@@ -315,6 +340,8 @@ async function playGeneratedAudio() {
   if (ctx.state === "suspended") await ctx.resume();
 
   setAudioStatus("Playing audio...");
+  isAudioPlaying = true;
+  updateAudioButtons();
 
   const bpm = parseInt(document.getElementById("bpmSlider").value);
   const step = (60 / bpm) * 0.5;
@@ -322,12 +349,11 @@ async function playGeneratedAudio() {
   const endTime = scheduleHumanizedPlayback(ctx, ctx.destination, events, ctx.currentTime + 0.15);
 
   currentPlayTimer = setTimeout(() => {
-    stopGeneratedAudio();
-    setAudioStatus("Playback complete.");
+    stopGeneratedAudio("Playback complete.");
   }, Math.max(0, (endTime - ctx.currentTime) * 1000) + 300);
 }
 
-function stopGeneratedAudio() {
+function stopGeneratedAudio(statusMessage) {
   if (currentSynth) {
     if (typeof currentSynth.releaseAll === "function") currentSynth.releaseAll();
     if (typeof currentSynth.dispose === "function") currentSynth.dispose();
@@ -345,6 +371,9 @@ function stopGeneratedAudio() {
   if (audioRecorder && audioRecorder.state !== "inactive") {
     try { audioRecorder.stop(); } catch (_) { /* recorder already stopping */ }
   }
+  isAudioPlaying = false;
+  updateAudioButtons();
+  if (statusMessage) setAudioStatus(statusMessage);
 }
 
 async function exportGeneratedAudio() {

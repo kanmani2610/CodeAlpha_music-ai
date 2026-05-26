@@ -21,6 +21,10 @@
           
         
       </div>
+      <div class="status-pill">
+        <span class="pill-dot"></span>
+        <span id="modelPillText">Checking model...</span>
+      </div>
       
     </div>
   </header>
@@ -40,6 +44,11 @@
     <div class="pipe-step" data-step="2" onclick="activateStep(2)">
       <div class="ps-num">03</div>
       <div class="ps-label">Download</div>
+    </div>
+    <div class="pipe-arrow">â€º</div>
+    <div class="pipe-step" data-step="3" onclick="activateStep(3)">
+      <div class="ps-num">04</div>
+      <div class="ps-label">Train</div>
     </div>
   </div>
 
@@ -170,17 +179,56 @@
       </div>
     </section>
 
+    <section class="step-panel" id="step3">
+      <h2 class="panel-title">Train LSTM Model</h2>
+
+      <div class="train-config">
+        <div class="field-group">
+          <label class="field-label" for="trainGenre">Training Genre</label>
+          <select class="field-select" id="trainGenre">
+            <option value="classical">Classical</option>
+            <option value="jazz">Jazz</option>
+            <option value="folk">Folk</option>
+            <option value="all">All available</option>
+          </select>
+        </div>
+
+        <div class="slider-item">
+          <div class="slider-header">
+            <span class="slider-label">Epochs</span>
+            <span class="slider-val" id="epochsVal">10</span>
+          </div>
+          <input type="range" id="epochsSlider" min="1" max="50" step="1" value="10"
+            oninput="document.getElementById('epochsVal').textContent=this.value">
+        </div>
+      </div>
+
+      <button class="btn-train" id="trainBtn" onclick="startTraining()">Train Model</button>
+
+      <div class="train-progress-wrap" id="trainProgressWrap" style="display:none">
+        <div class="train-prog-header">
+          <span id="trainMsg">Waiting...</span>
+          <span id="trainPct">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill green" id="trainFill"></div>
+        </div>
+        <div class="train-log" id="trainLog"></div>
+      </div>
+    </section>
+
   </main>
 
  
   <nav class="bottom-nav">
     <button onclick="activateStep(0)" id="nav0" class="nav-btn active">Create</button>
     <button onclick="activateStep(2); loadHistory()" id="navH" class="nav-btn">History</button>
+    <button onclick="activateStep(3)" id="navT" class="nav-btn">Train</button>
   </nav>
 
 </div>
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='css/js/app.js') }}"></script>
 </body>
 </html>
 

@@ -7,6 +7,7 @@ body {
   color: #e2e2ea;
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 
@@ -22,7 +23,7 @@ body {
 
 .app-shell {
   position: relative; z-index: 1;
-  max-width: 740px;
+  width: min(100%, 740px);
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
@@ -176,7 +177,7 @@ input[type=range]::-webkit-slider-thumb:hover {
 
 
 .mode-row {
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
   margin-bottom: 1.5rem;
 }
 .toggle-label {
@@ -279,6 +280,7 @@ canvas#pianoRoll { width: 100%; border-radius: 6px; display: block; }
 }
 .btn-download:hover { opacity: 0.88; }
 .btn-secondary {
+  flex: 1;
   padding: 12px 20px;
   background: rgba(7, 107, 67, 0.05);
   border: 1px solid rgba(7, 97, 55, 0.1);
@@ -299,7 +301,7 @@ canvas#pianoRoll { width: 100%; border-radius: 6px; display: block; }
   border: 1px solid rgba(4, 124, 58, 0.05);
   margin-bottom: 5px;
 }
-.hi-name { font-size: 12px; color: #9ca3af; }
+.hi-name { font-size: 12px; color: #9ca3af; min-width: 0; overflow-wrap: anywhere; }
 .hi-dl   {
   font-size: 11px; color: #03695f; text-decoration: none; font-weight: 600;
 }
@@ -356,6 +358,28 @@ canvas#pianoRoll { width: 100%; border-radius: 6px; display: block; }
 @media (min-width: 480px) {
   .slider-grid { grid-template-columns: 1fr 1fr 1fr; }
   .main-content { padding: 2rem; }
+}
+
+@media (max-width: 560px) {
+  .header { padding: 1rem; }
+  .pipeline-bar { padding: 0.65rem 1rem; }
+  .main-content { padding: 1rem; }
+  .genre-grid { grid-template-columns: repeat(2, 1fr); }
+  .mode-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .toggle-label { width: 100%; }
+  .action-row { flex-direction: column; }
+  .btn-download,
+  .btn-secondary { width: 100%; }
+  .player-card { align-items: flex-start; padding: 1rem; }
+  .player-art { width: 48px; height: 48px; }
+  .history-item { align-items: flex-start; gap: 10px; flex-direction: column; }
+  .bottom-nav { padding-left: 10px; padding-right: 10px; }
+}
+
+@media (max-width: 360px) {
+  .pipe-step { min-width: 70px; padding: 7px 6px; }
+  .panel-title { font-size: 18px; }
+  .genre-grid { grid-template-columns: 1fr; }
 }
 
 

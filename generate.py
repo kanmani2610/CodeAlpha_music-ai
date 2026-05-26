@@ -18,7 +18,7 @@ MODELS_DIR     = os.path.join(BASE_DIR, "models")
 GENERATED_DIR  = os.path.join(BASE_DIR, "generated")
 NOTES_CACHE    = os.path.join(MODELS_DIR, "notes.pkl")
 MAPPING_CACHE  = os.path.join(MODELS_DIR, "mapping.pkl")
-MODEL_WEIGHTS  = os.path.join(MODELS_DIR, "lstm_weights.h5")
+MODEL_WEIGHTS  = os.path.join(MODELS_DIR, "lstm.weights.h5")
 
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(GENERATED_DIR, exist_ok=True)
@@ -144,13 +144,14 @@ def build_model(n_vocab, seq_len=100):
 def train_model(model, X, y, epochs=50, batch_size=64):
     """
     Train with ModelCheckpoint + EarlyStopping.
-    Saves best weights to models/lstm_weights.h5
+    Saves best weights to models/lstm.weights.h5
     """
     import tensorflow as tf
     from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
     callbacks = [
         ModelCheckpoint(MODEL_WEIGHTS, save_best_only=True,
+                        save_weights_only=True,
                         monitor="val_loss", verbose=0),
         EarlyStopping(patience=10, restore_best_weights=True, verbose=0),
     ]

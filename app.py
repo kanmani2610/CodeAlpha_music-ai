@@ -48,6 +48,18 @@ def _parse_float(value, default, minimum=None, maximum=None):
     return parsed
 
 
+def _tensorflow_available():
+    try:
+        import tensorflow  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _model_ready(path):
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -72,7 +84,17 @@ def generate():
 
     try:
         if use_ai:
-           
+            from generate import MODEL_WEIGHTS
+            if not _tensorflow_available():
+                return jsonify({
+                    "success": False,
+                    "error": "LSTM mode needs TensorFlow, but TensorFlow is not installed for this Python.",
+                }), 400
+            if not _model_ready(MODEL_WEIGHTS):
+                return jsonify({
+                    "success": False,
+                    "error": "No valid trained LSTM model found. Train the model first or use rule-based mode.",
+                }), 400
             from generate import full_pipeline
             path, notes = full_pipeline(
                 genre=genre,
@@ -165,12 +187,15 @@ def train():
             from generate import MODEL_WEIGHTS, MAPPING_CACHE
             cbs = [
                 ModelCheckpoint(MODEL_WEIGHTS, save_best_only=True,
+                                save_weights_only=True,
                                 monitor="val_loss", verbose=0),
                 EarlyStopping(patience=10, restore_best_weights=True, verbose=0),
                 ProgressCallback(),
             ]
             model.fit(X, y, epochs=epochs, batch_size=64,
                       validation_split=0.1, callbacks=cbs, verbose=0)
+            if not _model_ready(MODEL_WEIGHTS):
+                model.save_weights(MODEL_WEIGHTS)
 
             training_state.update({"running": False, "progress": 100,
                                     "message": "Training complete"})
@@ -188,7 +213,7 @@ def train_status():
     from generate import MODEL_WEIGHTS
     return jsonify({
         **training_state,
-        "model_ready": os.path.exists(MODEL_WEIGHTS),
+        "model_ready": _model_ready(MODEL_WEIGHTS),
     })
 
 
@@ -198,8 +223,9 @@ def status():
     from generate import MODEL_WEIGHTS, NOTES_CACHE, GENERATED_DIR
     files = [f for f in os.listdir(GENERATED_DIR) if f.endswith(".mid")]
     return jsonify({
-        "model_cached":  os.path.exists(MODEL_WEIGHTS),
+        "model_cached":  _model_ready(MODEL_WEIGHTS),
         "notes_cached":  os.path.exists(NOTES_CACHE),
+        "tensorflow_available": _tensorflow_available(),
         "generated_files": len(files),
         "files": sorted(files, reverse=True)[:10],
     })
